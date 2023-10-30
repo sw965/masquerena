@@ -1,0 +1,29 @@
+table {
+    line-height: 0;
+}
+
+th {
+    border: 1px black solid;
+}
+
+.card-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+}
+
+#phase-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+}
+
+.p2h0, .p2h1, .p2h2, .p2h3, .p2h4, .p2h5, .p2h6, .p2h7 {
+    border: 0;
+}
+
+.p1h0, .p1h1, .p1h2, .p1h3, .p1h4, .p1h5, .p1h6, .p1h7 {
+    border: 0;
+}
