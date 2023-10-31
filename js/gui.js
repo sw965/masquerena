@@ -71,6 +71,11 @@ function cardToImgPath(card, isP1) {
     }
 }
 
+const VERTICAL_CARD_IMG_HEIGHT = 106
+const VERTICAL_CARD_IMG_WIDTH = 72
+const HORIZONTAL_CARD_IMG_HEIGHT = VERTICAL_CARD_IMG_WIDTH
+const HORIZONTAL_CARD_IMG_WIDTH = VERTICAL_CARD_IMG_HEIGHT
+
 const P2_SPELL_TRAP_ZONE_LINE_INDEX = 1
 const P2_MONSTER_ZONE_LINE_INDEX = P2_SPELL_TRAP_ZONE_LINE_INDEX + 1
 const P1_MONSTER_ZONE_LINE_INDEX = P2_MONSTER_ZONE_LINE_INDEX + 1
@@ -90,6 +95,25 @@ const TH_BORDER_PX_VAL = function() {
 }()
 
 const CARD_SPACE_PX_VAL = 112 + ((TH_BORDER_PX_VAL-1)*2)
+
+function makeHandPxVals(n, space) {
+    let vals = []
+    let width
+    while (true) {
+        width = (VERTICAL_CARD_IMG_WIDTH * n) + (space * (n-1))
+        if (width <= HAND_WIDTH_PX_VAL) {
+            break
+        }
+        space -= 1
+    }
+
+    xPxVal = HAND_MID_X_PX_VAL - (width / 2.0)
+    for (let i=0; i<n; i++) {
+        let val = xPxVal + (i * (VERTICAL_CARD_IMG_WIDTH + space))
+        vals.push(val)
+    }
+    return vals
+}
 
 function makePxVals(rc, init, space) {
     let result = []
@@ -134,6 +158,11 @@ function makeVerticalCardTranslateXYpx(row, cell) {
 function makeHorizontalCardTranslateXYpx(row, cell) {
     return HORIZONTAL_CARD_TRANSLATE_Y_PXS[row] + " " + HORIZONTAL_CARD_TRANSLATE_X_PXS[cell]
 }
+
+const HAND_LEFT_X_PX_VAL = VERTICAL_CARD_X_PX_VALS[0]
+const HAND_RIGHT_X_PX_VAL = VERTICAL_CARD_X_PX_VALS[VERTICAL_CARD_X_PX_VALS.length-1] + VERTICAL_CARD_IMG_WIDTH
+const HAND_WIDTH_PX_VAL = HAND_RIGHT_X_PX_VAL - HAND_LEFT_X_PX_VAL
+const HAND_MID_X_PX_VAL = (HAND_RIGHT_X_PX_VAL + HAND_LEFT_X_PX_VAL) / 2.0
 
 const PHASE_IMG_TOP = VERTICAL_CARD_Y_PXS[2]
 const PHASE_IMG_LEFT = HORIZONTAL_CARD_X_PXS[7]
@@ -221,6 +250,28 @@ function Test() {
     initState.P1.Hand.map(appendChildCardImg)
     initState.P2.Deck.map(appendChildCardImg)
     initState.P2.Hand.map(appendChildCardImg)
+
+    const n = 40
+    const vals = makeHandPxVals(n, 5)
+
+    for (let i=0; i<n; i++) {
+        let img = document.getElementById(i+1)
+        setTimeout(
+            () => {
+                img.src = IMAGE_PATH + P2_ATK_BATTLE_POSITION_DIR + "サファイアドラゴン.png"
+                img.style.zIndex = i
+                img.animate(
+                    [
+                        {transform:"translateX("+vals[i] + "px) translateY(12px)"},
+                    ],
+                    {
+                        fill:"forwards",
+                        duration:0,
+                    },
+                )
+            }, 1000*i,
+        )
+    }
 
     // for (let i= 0; i < states.length; i++) {
     //     let state = states[i]
