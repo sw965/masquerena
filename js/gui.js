@@ -34,47 +34,16 @@ function fileSelect() {
     })
 }
 
-const IMAGE_PATH = "image/reduced/"
-const EMPTY_IMG_PATH = IMAGE_PATH + "空白.png"
+const IMG_DIR = "image/"
+const EMPTY_IMG_PATH = IMG_DIR + "空白.png"
 const FACE_DOWN_IMG_DIR = "裏側.png"
-const P1_ATK_BATTLE_POSITION_DIR = "0/"
-const P1_DEF_BATTLE_POSITION_DIR = "90/"
-const P2_ATK_BATTLE_POSITION_DIR = "180/"
-const P2_DEF_BATTLE_POSITION_DIR = "270/"
+const VERTICAL_DIR = "vertical/"
+const HORIZONTAL_DIR = "horizontal/"
 
-function getAtkBattlePositionPath(isP1) {
-    if (isP1) {
-        return IMAGE_PATH + P1_ATK_BATTLE_POSITION_DIR
-    } else {
-        return IMAGE_PATH + P2_ATK_BATTLE_POSITION_DIR 
-    }
-}
-
-function getDefBattlePositionPath(isP1) {
-    if (isP1) {
-        return IMAGE_PATH + P1_DEF_BATTLE_POSITION_DIR
-    } else {
-        return IMAGE_PATH + P2_DEF_BATTLE_POSITION_DIR
-    }
-}
-
-function cardToImgPath(card, isP1) {
-    const pos = card.BattlePosition
-    if (card.Name == "") {
-        return EMPTY_IMG_PATH
-    } else if (pos == "攻撃表示") {
-        return getAtkBattlePositionPath(isP1) + card.Name + ".png"
-    } else if (pos == "表側守備表示") {
-        return getDefBattlePositionPath(isP1) + card.Name + ".png"
-    } else {
-        return getDefBattlePositionPath(isP1) + FACE_DOWN_IMG_DIR
-    }
-}
-
-const VERTICAL_CARD_IMG_HEIGHT = 106
-const VERTICAL_CARD_IMG_WIDTH = 72
-const HORIZONTAL_CARD_IMG_HEIGHT = VERTICAL_CARD_IMG_WIDTH
-const HORIZONTAL_CARD_IMG_WIDTH = VERTICAL_CARD_IMG_HEIGHT
+const VERTICAL_CARD_HEIGHT = 106
+const VERTICAL_CARD_WIDTH = 72
+const HORIZONTAL_CARD_IMG_HEIGHT = VERTICAL_CARD_WIDTH
+const HORIZONTAL_CARD_IMG_WIDTH = VERTICAL_CARD_HEIGHT
 
 const P2_SPELL_TRAP_ZONE_LINE_INDEX = 1
 const P2_MONSTER_ZONE_LINE_INDEX = P2_SPELL_TRAP_ZONE_LINE_INDEX + 1
@@ -104,7 +73,13 @@ function makeHandPxVals(n, space) {
         if (width <= HAND_WIDTH_PX_VAL) {
             break
         }
+
         space -= 1
+        if (space < 0) {
+            if (-space >= VERTICAL_CARD_IMG_WIDTH) {
+                break
+            }
+        }
     }
 
     xPxVal = HAND_MID_X_PX_VAL - (width / 2.0)
@@ -125,7 +100,7 @@ function makePxVals(rc, init, space) {
 }
 
 const VERTICAL_CARD_X_PX_VALS = makePxVals(BOARD_CELL, 28+(TH_BORDER_PX_VAL-1), CARD_SPACE_PX_VAL)
-const VERTICAL_CARD_Y_PX_VALS = makePxVals(BOARD_ROW, 122+(TH_BORDER_PX_VAL-1), CARD_SPACE_PX_VAL)
+const VERTICAL_CARD_Y_PX_VALS = makePxVals(BOARD_ROW, 122+(TH_BORDER_PX_VAL-1)-CARD_SPACE_PX_VAL, CARD_SPACE_PX_VAL)
 const HORIZONTAL_CARD_X_PX_VALS = makePxVals(BOARD_CELL, 12+(TH_BORDER_PX_VAL-1), CARD_SPACE_PX_VAL)
 const HORIZONTAL_CARD_Y_PX_VALS = makePxVals(BOARD_ROW, 139+(TH_BORDER_PX_VAL-1), CARD_SPACE_PX_VAL)
 
@@ -160,76 +135,15 @@ function makeHorizontalCardTranslateXYpx(row, cell) {
 }
 
 const HAND_LEFT_X_PX_VAL = VERTICAL_CARD_X_PX_VALS[0]
-const HAND_RIGHT_X_PX_VAL = VERTICAL_CARD_X_PX_VALS[VERTICAL_CARD_X_PX_VALS.length-1] + VERTICAL_CARD_IMG_WIDTH
+const HAND_RIGHT_X_PX_VAL = VERTICAL_CARD_X_PX_VALS[VERTICAL_CARD_X_PX_VALS.length-1] + VERTICAL_CARD_WIDTH
 const HAND_WIDTH_PX_VAL = HAND_RIGHT_X_PX_VAL - HAND_LEFT_X_PX_VAL
 const HAND_MID_X_PX_VAL = (HAND_RIGHT_X_PX_VAL + HAND_LEFT_X_PX_VAL) / 2.0
-
-const PHASE_IMG_TOP = VERTICAL_CARD_Y_PXS[2]
-const PHASE_IMG_LEFT = HORIZONTAL_CARD_X_PXS[7]
-
-function initPhaseImg() {
-    const img = document.getElementById("phase-img")
-    img.style.top = PHASE_IMG_TOP
-    img.style.left = PHASE_IMG_LEFT
-}
 
 function appendChildCardImg(card) {
     let img = document.createElement("img")
     img.id = card.ID
     img.className = "card-img"
     document.body.appendChild(img)
-    img.style.display = "block"
-}
-
-function normalSummon(state, action) {
-    const handIdx = action.Indices1[0]
-    const mZoneIdx = action.Indices2[0]
-
-    let card
-    if (state.IsP1Turn) {
-        card = state.P1.Hand[handIdx]
-        row = 2
-    } else {
-        card = state.P2.Hand[handIdx]
-        row = 1
-    }
-
-    const img = document.getElementById(card.ID)
-
-    if (action.BattlePosition == "攻撃表示") {
-        xy = makeVerticalCardTranslateXYpx(row, mZoneIdx+2)
-    } else {
-        xy = makeHorizontalCardTranslateXYpx(row, mZoneIdx+2)
-    }
-
-
-    img.animate(
-        [
-            {transform:xy, offset:1.0},
-        ],
-        {
-            fill:"forwards",
-            duration:100,
-        },
-    )
-
-    if (state.IsP1Turn) {
-        if (action.BattlePosition == "攻撃表示") {
-            img.src = IMAGE_PATH + P1_ATK_BATTLE_POSITION_DIR + card.Name + ".png"
-        } else if (action.BattlePosition == "表側守備表示") {
-            img.src = IMAGE_PATH + P1_DEF_BATTLE_POSITION_DIR + card.Name + ".png"
-        } else {
-            img.src = IMAGE_PATH + P1_DEF_BATTLE_POSITION_DIR + FACE_DOWN_IMG_DIR
-        }
-    } else {
-        if (action.BattlePosition == "攻撃表示") {
-            img.src = IMAGE_PATH + P2_ATK_BATTLE_POSITION_DIR + card.Name + ".png"
-        } else if (action.BattlePosition == "表側守備表示") {
-            img.src = IMAGE_PATH + P2_DEF_BATTLE_POSITION_DIR + card.Name + ".png"
-        } else {
-            img.src = IMAGE_PATH + P2_DEF_BATTLE_POSITION_DIR + FACE_DOWN_IMG_DIR
-        }
-    }
 }
 
 function Test() {
@@ -251,33 +165,11 @@ function Test() {
     initState.P2.Deck.map(appendChildCardImg)
     initState.P2.Hand.map(appendChildCardImg)
 
-    const n = 40
-    const vals = makeHandPxVals(n, 5)
-
-    for (let i=0; i<n; i++) {
-        let img = document.getElementById(i+1)
-        setTimeout(
-            () => {
-                img.src = IMAGE_PATH + P2_ATK_BATTLE_POSITION_DIR + "サファイアドラゴン.png"
-                img.style.zIndex = i
-                img.animate(
-                    [
-                        {transform:"translateX("+vals[i] + "px) translateY(12px)"},
-                    ],
-                    {
-                        fill:"forwards",
-                        duration:0,
-                    },
-                )
-            }, 1000*i,
-        )
-    }
-
-    // for (let i= 0; i < states.length; i++) {
-    //     let state = states[i]
-    //     let action = actions[i]
-    //     if (action.Type == "通常召喚") {
-    //         normalSummon(state, action)
-    //     }
-    // }
+    let img = document.getElementById("10")
+    img.style.top = VERTICAL_CARD_Y_PXS[0]
+    img.style.left = VERTICAL_CARD_X_PXS[0]
+    img.style.display = "block"
+    console.log(VERTICAL_CARD_X_PXS[0])
+    img.src = IMG_DIR + VERTICAL_DIR + "p1/" + "サファイアドラゴン.png"
+    console.log(IMG_DIR + VERTICAL_DIR + "p1/" + "サファイアドラゴン.png" )
 }
